@@ -33,7 +33,7 @@ class Neuron(ABC):
         return np.sum(np.abs(self.actual_label - self.predicted_label))
 
     def get_state(self, inputs):
-        return self.weights @ inputs
+        return np.transpose(self.weights) @ inputs
 
     @abstractmethod
     def activate(self, state):

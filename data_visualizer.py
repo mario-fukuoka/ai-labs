@@ -29,6 +29,7 @@ class DataVisualizer:
 
         self.boundary_x = np.array([])
         self.boundary_y = np.array([])
+        self.boundary_error_threshold = 1
 
         self.neuron = neuron_type
         
@@ -77,13 +78,7 @@ class DataVisualizer:
         save_button.on_clicked(lambda _: self.save_data_to_json_file(save_textbox.text))
         
         plt.show()
-        #plt.show()
-        #self.generate_and_plot_samples(self.default_num_of_modes, self.default_num_of_samples, self.default_num_of_modes, self.default_num_of_samples)
-
-    def wait(self):
-        while(True):
-            pass
-
+        
     def get_rand_float(self, min, max):
         return min + (max - min) * np.random.random()
 
@@ -153,14 +148,14 @@ class DataVisualizer:
     def find_boundary(self):
         num_of_iterations = 1000
         i = 0
-        state = self.neuron.get_state(self.neuron.inputs)
-        print(self.neuron.activate(state))
-        print(self.neuron.activate_prime(state))
-        while(self.neuron.get_error() != 0.0 and i < num_of_iterations):
-            #self.neuron.learning_rate = self.neuron.default_learning_rate * (1 - i/num_of_iterations)
+        start_time = time.process_time()
+        while(self.neuron.get_error() >= self.boundary_error_threshold and i < num_of_iterations):
+            self.neuron.learning_rate = self.neuron.default_learning_rate * (1 - i/num_of_iterations)
             self.neuron.iterate_weights()
             i += 1
-        self.ax.set_title('error = ' + str(format(self.neuron.get_error(), '.3f')) + ', iterations = ' + str(i) + ', final learning rate = ' + str(format(self.neuron.learning_rate, '.3f')))
+        elapsed_time = time.process_time() - start_time
+        self.ax.set_title('error = ' + str(format(self.neuron.get_error(), '.3f')) + ", time = " + str(format((elapsed_time), '.3f')) + ', iterations = ' + str(i) + ', final l_r = ' + str(format(self.neuron.learning_rate, '.3f')))
+        
         self.boundary_x = np.linspace(np.amin(self.neuron.inputs[1]), np.amax(self.neuron.inputs[1]))
         self.boundary_y = -(self.neuron.weights[0] + self.neuron.weights[1] * self.boundary_x)/self.neuron.weights[2] 
         
@@ -186,7 +181,7 @@ class DataVisualizer:
         
 
     def find_and_plot_boundary(self, neuron_type=Perceptron()):
-        #self.neuron = neuron_type
+        # self.neuron = neuron_type
         self.load_data_to_neuron()
         self.find_boundary()
         self.plot_boundary()
