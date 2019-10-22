@@ -5,6 +5,8 @@ import json, os
 from perceptron import Perceptron
 from sigmoidneuron import SigmoidNeuron
 from reluneuron import ReLUNeuron
+from sinusoidneuron import SinusoidNeuron
+from hypertanneuron import HyperTanNeuron
 import time
 
 
@@ -29,7 +31,9 @@ class DataVisualizer:
 
         self.boundary_x = np.array([])
         self.boundary_y = np.array([])
-        self.boundary_error_threshold = 1
+
+        self.boundary_error_threshold = 0.1
+        self.num_of_iterations = 20000
 
         self.neuron = neuron_type
         
@@ -146,11 +150,10 @@ class DataVisualizer:
         self.neuron.load_data(self.get_formatted_data_vector())
 
     def find_boundary(self):
-        num_of_iterations = 1000
         i = 0
         start_time = time.process_time()
-        while(self.neuron.get_error() >= self.boundary_error_threshold and i < num_of_iterations):
-            self.neuron.learning_rate = self.neuron.default_learning_rate * (1 - i/num_of_iterations)
+        while(self.neuron.get_error() >= self.boundary_error_threshold and i < self.num_of_iterations):
+            self.neuron.learning_rate = self.neuron.default_learning_rate * (1 - i/self.num_of_iterations * 0.5)
             self.neuron.iterate_weights()
             i += 1
         elapsed_time = time.process_time() - start_time
@@ -171,8 +174,13 @@ class DataVisualizer:
         boundary_min = np.amin([np.amin(self.neuron.inputs[2]), np.amin(self.boundary_y)])
         boundary_max = np.amax([np.amax(self.neuron.inputs[2]), np.amax(self.boundary_y)])
         
-        under_the_border = self.neuron.get_state([self.neuron.inputs[0][0], self.neuron.inputs[1][0], boundary_min - 1])
-        if self.neuron.activate([under_the_border]) <= 0.5:
+        under_the_border = self.neuron.get_state([1, self.neuron.inputs[1][0], boundary_min - 1])
+        activated = self.neuron.activate(under_the_border)
+        # print(under_the_border)
+        # print(activated)
+        # print(activated <= 0.5)
+
+        if self.neuron.activate(under_the_border) <= 0.5:
             self.ax.fill_between(self.boundary_x, self.boundary_y, boundary_min, color=self.c0_color, alpha=half_plane_alpha)
             self.ax.fill_between(self.boundary_x, self.boundary_y, boundary_max, color=self.c1_color, alpha=half_plane_alpha)
         else:
